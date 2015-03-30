@@ -10,9 +10,12 @@ public class Configuration {
     public String entityLookupFileName;
     public String caseLookupFileName;
 
+    public int spreadingMode;
+    public int budget; // Number of cases to be retrieved.
+
     public Configuration(boolean reverseEdges, boolean caseCaseEdges, String relevanceFileName,
             String similarityFileName, String caseCaseFileName, String reverseFileName,
-            String entityLookupFileName, String caseLookupFileName) {
+            String entityLookupFileName, String caseLookupFileName, int spreadingMode, int budget) {
         this.includeReverseEdges = reverseEdges;
         this.includeCaseCaseEdges = caseCaseEdges;
         this.relevanceFileName = relevanceFileName;
@@ -21,5 +24,7 @@ public class Configuration {
         this.reverseFileName = reverseFileName;
         this.entityLookupFileName = entityLookupFileName;
         this.caseLookupFileName = caseLookupFileName;
+        this.spreadingMode = spreadingMode;
+        this.budget = budget;
     }
 }
