@@ -24,8 +24,9 @@ public class CreateMatrices {
     public List<List<Double>> relevanceMatrix;
     public List<List<Double>> similarityMatrix; // edu.cmu.lti.ws4j.impl.WuPalmer
     public List<Integer> classList; // case -> class
+    public List<String> caseWordCounts;
 
-    public CreateMatrices(List<String> folderPaths) {
+    public CreateMatrices() {
         cases = new ArrayList<String>();
         entities = new ArrayList<String>();
         classes = new ArrayList<String>();
@@ -33,6 +34,39 @@ public class CreateMatrices {
         relevanceMatrix = new ArrayList<List<Double>>();
         similarityMatrix = new ArrayList<List<Double>>();
         classList = new ArrayList<Integer>();
+        caseWordCounts = new ArrayList<String>();
+    }
+
+    public static void main(String[] args) {
+        /*
+        List<String> folderPaths = new ArrayList<String>();
+        folderPaths.add("/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/atheism_train");
+        folderPaths.add("/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/religion_train");
+        CreateMatrices creator = new CreateMatrices();
+        creator.createTrainData(folderPaths, "/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/matrices");
+        */
+        
+        // Test Data
+        List<String> folderPaths = new ArrayList<String>();
+        folderPaths.add("/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/atheism_test");
+        folderPaths.add("/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/religion_test");
+        String entityFile = "/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/matrices/entities.txt";
+        CreateMatrices creator = new CreateMatrices();
+        creator.createTestData(folderPaths, entityFile, "/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism/matrices_test");
+    }
+
+    public void createTrainData(List<String> folderPaths, String outFolder) {
+        createClasses(folderPaths);
+        System.out.println("Created Classes");
+        createCaseAndClassLists();
+        System.out.println("Created case list");
+        createFrequencyList();
+        System.out.println("Created frequency list");
+        // createSimilarityMatrix();
+        // System.out.println("Created similarity matrix");
+        createRelevanceMatrix();
+        System.out.println("Created relevance matrix");
+        writeToFiles(outFolder);
     }
 
     public void createClasses(List<String> folderPaths) {
@@ -60,6 +94,7 @@ public class CreateMatrices {
             try {
                 BufferedReader br = new BufferedReader(new FileReader(file));
                 String line;
+                int wordCount = 0;
                 // Assuming each line contains a word.
                 while ((line = br.readLine()) != null) {
                     if (!entities.contains(line)) {
@@ -69,9 +104,10 @@ public class CreateMatrices {
                     if (!frequencyMap.containsKey(entityIndex)) {
                         frequencyMap.put(entityIndex, 0);
                     }
-                    frequencyMap.put(entityIndex,
-                            frequencyMap.get(entityIndex) + 1);
+                    frequencyMap.put(entityIndex, frequencyMap.get(entityIndex) + 1);
+                    wordCount++;
                 }
+                caseWordCounts.add(Integer.toString(wordCount));
                 br.close();
             } catch (Exception e) {
                 System.out.println("Problem while reading " + file);
@@ -80,6 +116,7 @@ public class CreateMatrices {
         }
     }
 
+    // entity x case
     public void createRelevanceMatrix() {
         for (int entityIndex = 0; entityIndex < entities.size(); ++entityIndex) {
             List<Double> relevances = new ArrayList<Double>();
@@ -107,6 +144,9 @@ public class CreateMatrices {
     }
 
     public void writeToFiles(String outFolder) {
+        // WordCounts
+        Utils.writeStringListToFile(caseWordCounts, outFolder + "/" + "caseWordCounts.txt");
+
         // Cases
         Utils.writeStringListToFile(cases, outFolder + "/" + "cases.txt");
 
@@ -122,10 +162,10 @@ public class CreateMatrices {
             }
             caseNum += 1;
         }
-        Utils.writeStringListToFile(frequencyStr, outFolder + "/" + "entities.txt");
+        Utils.writeStringListToFile(frequencyStr, outFolder + "/" + "frequencyList.txt");
 
         // Similarity Matrix
-        Utils.writeDoubleMatrixToFile(similarityMatrix, outFolder + "/" + "similarityMatrix.txt");
+        // Utils.writeDoubleMatrixToFile(similarityMatrix, outFolder + "/" + "similarityMatrix.txt");
 
         // Relevance Matrix
         Utils.writeDoubleMatrixToFile(relevanceMatrix, outFolder + "/" + "relevanceMatrix.txt");
@@ -139,5 +179,42 @@ public class CreateMatrices {
             classStrList.add(classNum.toString());
         }
         Utils.writeStringListToFile(classStrList, outFolder + "/" + "classList.txt");
+    }
+
+    // TESTING
+    public void createTestData(List<String> folderPaths, String entityFile, String outFolder) {
+        List<String> entitiesList = new ArrayList<String>();
+        Utils.readStringList(entitiesList, entityFile);
+        for (String folderPath : folderPaths) {
+            File[] files = new File(folderPath).listFiles();
+            for (File file : files) {
+                HashMap<Integer, Integer> frequencies = new HashMap<Integer, Integer>();
+                try {
+                    BufferedReader br = new BufferedReader(new FileReader(file));
+                    String line;
+                    // Assuming each line contains a word.
+                    while ((line = br.readLine()) != null) {
+                        int entityIndex = entitiesList.indexOf(line);
+                        if (entityIndex != -1) {
+                            if (!frequencies.containsKey(entityIndex)) {
+                                frequencies.put(entityIndex, 0);
+                            }
+                            frequencies.put(entityIndex, frequencies.get(entityIndex) + 1);
+                        }
+                    }
+                    br.close();
+                } catch (Exception e) {
+                    System.out.println("Error in reading " + file.getAbsolutePath());
+                    System.out.println(e.getMessage());
+                }
+                // Write it to a file.
+                List<String> frequencyStr = new ArrayList<String>();
+                for (Entry<Integer, Integer> entity : frequencies.entrySet()) {
+                        frequencyStr.add(entity.getKey() + " " + entity.getValue());
+                }
+                Utils.writeStringListToFile(frequencyStr, outFolder + "/" 
+                        + new File(folderPath).getName() + "/" + file.getName());
+            }
+        }
     }
 }

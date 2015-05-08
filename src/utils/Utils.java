@@ -19,7 +19,7 @@ public class Utils {
         }
 
         public int compare(Integer a, Integer b) {
-            if (base.get(a) <= base.get(b)) {
+            if (base.get(a) >= base.get(b)) {
                 return -1;
             } else {
                 return 1;
@@ -32,13 +32,19 @@ public class Utils {
         TreeMap<Integer,Double> sortedValues = new TreeMap<Integer, Double>(comparator);
         sortedValues.putAll(values);
         List<Integer> results = new ArrayList<Integer>();
+        int count = 0;
         for (int key : sortedValues.keySet()) {
+            if (count >= budget) {
+                break;
+            }
             results.add(key);
+            count++;
         }
         return results;
     }
 
     public static void writeStringListToFile(List<String> lines, String outFileName) {
+        System.out.println("Writing " + outFileName);
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(outFileName));
             for (String line : lines) {
@@ -53,6 +59,7 @@ public class Utils {
     }
 
     public static void writeDoubleMatrixToFile(List<List<Double>> matrix, String outFileName) {
+        System.out.println("Writing " + outFileName);
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(outFileName));
             for (List<Double> row : matrix) {
@@ -101,5 +108,48 @@ public class Utils {
             System.out.println("Error reading " + inFileName);
             System.out.println(e.getMessage());
         }
+    }
+
+    public static void readStringList(List<String> array, String inFileName) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(inFileName));
+            String line;
+            while ((line = br.readLine()) != null) {
+                array.add(line);
+            }
+            br.close();
+        } catch (Exception e) {
+            System.out.println("Error reading " + inFileName);
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static void readFirstRow(HashMap<Integer, Double> map, String inFileName) {
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(inFileName));
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(" ");
+                map.put(Integer.parseInt(parts[0]), 1.0);
+            }
+            br.close();
+        } catch (Exception e) {
+            System.out.println("Error reading " + inFileName);
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public static void matrixTranspose(List<List<Double>> matrix, List<List<Double>> transpose) {
+        int numRows = matrix.size();
+        int numColumns = matrix.get(0).size();
+        for (int i = 0; i < numColumns; ++i) {
+            System.out.println(i);
+            List<Double> newRow = new ArrayList<Double>();
+            transpose.add(newRow);
+            for (int j = 0; j < numRows; ++j) {
+                newRow.add(matrix.get(j).get(i));
+            }
+        }
+        System.out.println("###################################################");
     }
 }
