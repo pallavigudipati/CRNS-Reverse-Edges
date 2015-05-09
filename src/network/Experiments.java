@@ -11,15 +11,15 @@ public class Experiments {
 
     public static void main(String[] args) {
         /*
-        String root = "/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relPol";
+        String root = "/home/pallavi/Acads/sem-8/MBR/Project/CRNS-Reverse-Edges/datasets/relAtheism";
         String relevanceFileName = root + "/matrices/relevanceMatrix.txt";
         String caseClassFileName = root + "/matrices/classList.txt";
         String caseWordCounts = root + "/matrices/caseWordCounts.txt";
         Configuration config = new Configuration(true, false, false, relevanceFileName, null, null, null,
-                caseClassFileName, caseWordCounts, null, null, GlobalVariables.SpreadingMode.CONTADCREVERSE, 11);
+                caseClassFileName, caseWordCounts, null, null, GlobalVariables.SpreadingMode.DISCADDCUTOFFREVERSE, 11);
         TextNetwork basicNetwork = new TextNetwork(config);
         basicNetwork.populateLookupsAndMatrices();
-        String hardware = root + "/matrices_test/politics_test";
+        String hardware = root + "/matrices_test/atheism_test";
         String religion = root + "/matrices_test/religion_test";
         // Hardware
         double hAccuracy = 0;
@@ -40,14 +40,14 @@ public class Experiments {
             rAccuracy += acc;
         }
         rAccuracy /= rFiles.length;
-        System.out.println("Politics Acc " + hAccuracy);
+        System.out.println("Atheism Acc " + hAccuracy);
         System.out.println("Religion Acc " + rAccuracy);
-        */
+    */
         String root = "/home/pallavi/Acads/sem-8/MBR/Project/www.cs.washington.edu/research/imagedatabase/groundtruth/cherriesVsGreenLake";
         String relevanceFileName = root + "/train/relevance.txt";
         String caseClassFileName = root + "/train/classList.txt";
         Configuration config = new Configuration(true, false, false, relevanceFileName, null, null, null,
-                caseClassFileName, null, null, null, GlobalVariables.SpreadingMode.DISCCUTOFFREVERSE, 11);
+                caseClassFileName, null, null, null, GlobalVariables.SpreadingMode.CONTADCREVERSE, 11);
         TextNetwork basicNetwork = new TextNetwork(config);
         basicNetwork.populateLookupsAndMatrices();
         String testRelevanceFileName = root + "/test/relevance.txt";

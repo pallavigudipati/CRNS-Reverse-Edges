@@ -11,5 +11,6 @@ public class GlobalVariables {
         public static final int DISCCUTOFFREVERSE = 6;
         public static final int DISCADDCUTOFFREVERSE = 7;
         public static final int CONTADCREVERSE = 8;
+        public static final int CARDINALITYCUTOFF = 9;
     }
 }

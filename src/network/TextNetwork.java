@@ -59,7 +59,8 @@ public class TextNetwork {
                 config.spreadingMode == GlobalVariables.SpreadingMode.ADDITIVECUTOFFREVERSE ||
                 config.spreadingMode == GlobalVariables.SpreadingMode.DISCCUTOFFREVERSE ||
                 config.spreadingMode == GlobalVariables.SpreadingMode.DISCADDCUTOFFREVERSE ||
-                config.spreadingMode == GlobalVariables.SpreadingMode.CONTADCREVERSE) {
+                config.spreadingMode == GlobalVariables.SpreadingMode.CONTADCREVERSE ||
+                config.spreadingMode == GlobalVariables.SpreadingMode.CARDINALITYCUTOFF) {
             Utils.matrixTranspose(relevanceMatrix, reverseMatrix);
         }
     }
@@ -107,25 +108,30 @@ public class TextNetwork {
         } else if (config.spreadingMode == GlobalVariables.SpreadingMode.SIMPLEREVERSE) {
             simpleReverseSpread(inititalActivations, caseActivations);
         } else if (config.spreadingMode == GlobalVariables.SpreadingMode.CUTOFFREVERSE) {
-            double cutoff = inititalActivations.size() * 0.5;
+            double cutoff = 0.1;
             cutoffReverseSpread(inititalActivations, caseActivations, cutoff);
-        } else if (config.spreadingMode == GlobalVariables.SpreadingMode.ADDITIVESIMPLEREVERSE) {
+        } else if (config.spreadingMode == GlobalVariables.SpreadingMode.CARDINALITYCUTOFF) {
+            double cutoff = 0.5;
+            double caseC = 100;
+            double ie = 60;
+            cutoffCardinalityReverseSpread(inititalActivations, caseActivations, cutoff, caseC, ie);
+        }  else if (config.spreadingMode == GlobalVariables.SpreadingMode.ADDITIVESIMPLEREVERSE) {
             additiveSimpleReverseSpread(inititalActivations, caseActivations);
         } else if (config.spreadingMode == GlobalVariables.SpreadingMode.ADDITIVECUTOFFREVERSE) {
-            double cutoff = inititalActivations.size() * 0.7;
+            double cutoff = 0.5;
             additiveCutoffReverseSpread(inititalActivations, caseActivations, cutoff);
         } else if (config.spreadingMode == GlobalVariables.SpreadingMode.DISCCUTOFFREVERSE) {
             double cutoff = inititalActivations.size() * 0.5;
             double disc = 0.5;
             discCutoffReverseSpread(inititalActivations, caseActivations, cutoff, disc);
         } else if (config.spreadingMode == GlobalVariables.SpreadingMode.DISCADDCUTOFFREVERSE) {
-            double cutoff = inititalActivations.size() * 0.6;
-            double disc = 0.6;
+            double cutoff = 0.5;
+            double disc = 0.8;
             addDiscCutoffReverseSpread(inititalActivations, caseActivations, cutoff, disc);
         } else if (config.spreadingMode == GlobalVariables.SpreadingMode.CONTADCREVERSE) {
-            double cutoff = inititalActivations.size() * 0.6;
+            double cutoff = 0.5;
             double disc = 0.5;
-            double threshold = 0.2;
+            double threshold = 0.05;
             ContADCReverseSpread(inititalActivations, caseActivations, cutoff, disc, threshold);
         }
         return Utils.getTopCases(caseActivations, config.budget);
@@ -161,6 +167,33 @@ public class TextNetwork {
                         caseActivations.put(caseId, caseActivations.get(caseId) + extraActivation);
                     } else {
                         caseActivations.put(caseId, extraActivation);
+                    }
+                }
+            }
+        }
+        if (config.disadvLongFiles) {
+            for (int caseId : caseActivations.keySet()) {
+                caseActivations.put(caseId, caseActivations.get(caseId) / caseWordCounts.get(caseId));
+            }
+        }
+        normalizeCaseActivations(caseActivations);
+    }
+
+    public void basicCardinalityActivationSpread(HashMap<Integer, Double> activations,
+            HashMap<Integer,Double> caseActivations, double cutoff) {
+        // Relevance Spread.
+        for (int ie : activations.keySet()) {
+            double ieActivation = activations.get(ie);
+            List<Double> relevances = relevanceMatrix.get(ie);
+            if (sum(relevances) < cutoff) {
+                for (int caseId = 0; caseId < relevances.size(); ++caseId) {
+                    if (relevances.get(caseId) != 0) {
+                        double extraActivation = ieActivation * relevances.get(caseId);
+                        if (caseActivations.get(caseId) != null) {
+                            caseActivations.put(caseId, caseActivations.get(caseId) + extraActivation);
+                        } else {
+                            caseActivations.put(caseId, extraActivation);
+                        }
                     }
                 }
             }
@@ -236,6 +269,36 @@ public class TextNetwork {
         }
         // Second e->c activation
         basicActivationSpread(activations, caseActivationsFinal);
+    }
+
+    public void cutoffCardinalityReverseSpread(HashMap<Integer, Double> activations,
+            HashMap<Integer, Double> caseActivationsFinal, double cutoff, double caseCCutOff, double ieCCutoff) {
+        // First e->c activation
+        HashMap<Integer, Double> caseActivations = new HashMap<Integer, Double>();
+        basicCardinalityActivationSpread(activations, caseActivations, ieCCutoff);
+        // Reverse Activation c-> e
+        for (int caseNum : caseActivations.keySet()) {
+            if (caseActivations.get(caseNum) > cutoff && sum(reverseMatrix.get(caseNum)) < caseCCutOff) {
+                List<Double> reverseRelevances = reverseMatrix.get(caseNum);
+                for (int eId = 0; eId < reverseRelevances.size(); ++eId) {
+                    if (reverseRelevances.get(eId) == 1) {
+                        if (activations.get(eId) == null) {
+                            activations.put(eId, 1.0);
+                        }
+                    }
+                }
+            }
+        }
+        // Second e->c activation
+        basicCardinalityActivationSpread(activations, caseActivationsFinal, ieCCutoff);
+    }
+    
+    private double sum(List<Double> array) {
+        double sum = 0;
+        for (double element : array) {
+            sum += element;
+        }
+        return sum;
     }
 
     public void discCutoffReverseSpread(HashMap<Integer, Double> activations,
